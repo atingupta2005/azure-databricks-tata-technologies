@@ -87,58 +87,36 @@ Your organization wants to:
    - Attempt to exceed **5 workers** → Should fail.  
 
 ---
+# **Audit Logs in AWS Databricks**
+### **1. Using AWS CloudTrail for Workspace-Level Events**
+1. **Access CloudTrail**:
+   - Go to **AWS Console → CloudTrail → Event history**
+   - Filter for `Event source = databricks.amazonaws.com`
 
-# **Reviewing Audit Logs in AWS Databricks**  
+2. **Key Event Types**:
+   ```bash
+   # Cluster management
+   CreateCluster
+   DeleteCluster
+   EditCluster
 
-## **Scenario**  
-You need to:  
-- Track **who created/deleted clusters**.  
-- Monitor **notebook changes**.  
-- Detect **failed login attempts** (security threat detection).  
+   # Notebook operations
+   CreateNotebook
+   DeleteNotebook
+   ```
 
----
+3. **Sample CloudTrail Entry**:
+   ```json
+   {
+     "eventTime": "2024-05-20T10:15:30Z",
+     "eventSource": "databricks.amazonaws.com",
+     "eventName": "CreateCluster",
+     "userIdentity": {
+       "arn": "arn:aws:iam::123456789012:user/john.doe"
+     },
+     "requestParameters": {
+       "clusterName": "production-job-cluster"
+     }
+   }
+   ```
 
-## **Step-by-Step Implementation**  
-
-### **1. Access Audit Logs**  
-- Navigate to:  
-  ```
-  Admin Console → Audit Logs
-  ```  
-- AWS Databricks sends logs to **AWS CloudTrail** (for workspace-level events) and **Databricks audit logs** (for detailed actions).  
-
-### **2. Filter Logs for Key Events**  
-**Example 1: Detect Unauthorized Cluster Creation**  
-- **Filter**: `actionName = "createCluster"`  
-- **Sample Log Entry**:  
-  ```json
-  {
-    "serviceName": "clusters",
-    "actionName": "createCluster",
-    "timestamp": "2024-05-15T14:30:00Z",
-    "requestParams": {
-      "cluster_name": "unauthorized-large-cluster",
-      "num_workers": 20,
-      "node_type_id": "m5.4xlarge"
-    },
-    "userIdentity": {
-      "email": "user@example.com"
-    }
-  }
-  ```  
-- **Action**: If a user violates policies, **revoke permissions**.  
-
-**Example 2: Monitor Notebook Changes**  
-- **Filter**: `actionName = "notebookUpdate"`  
-- **Sample Log Entry**:  
-  ```json
-  {
-    "serviceName": "notebooks",
-    "actionName": "notebookUpdate",
-    "notebookId": "123456",
-    "userIdentity": {
-      "email": "developer@example.com"
-    },
-    "timestamp": "2024-05-15T15:45:00Z"
-  }
-  ```  
